@@ -12,33 +12,25 @@ import java.util.Collections;
 import java.util.List;
 
 import fr.iut_amiens.imagelist.model.Image;
-import fr.iut_amiens.imagelist.service.ImageDownloader;
 import fr.iut_amiens.imagelist.task.DownloadListTask;
 
 public final class MainActivity extends Activity implements ImageAdapter.OnItemClickListener {
 
-    private ImageDownloader imageDownloader;
-
     private ImageAdapter imageAdapter;
-
-    private DownloadListTask downloadListTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        imageDownloader = new ImageDownloader(this);
-
-        imageAdapter = new ImageAdapter(getLayoutInflater(), imageDownloader);
+        imageAdapter = new ImageAdapter(getLayoutInflater());
         imageAdapter.setHasStableIds(true);
         imageAdapter.setOnItemClickListener(this);
 
         getLoaderManager().initLoader(0, null, new LoaderManager.LoaderCallbacks<List<Image>>() {
             @Override
             public Loader<List<Image>> onCreateLoader(int id, Bundle args) {
-                DownloadListTask task = new DownloadListTask(MainActivity.this);
-                return task;
+                return new DownloadListTask(MainActivity.this);
             }
 
             @Override
@@ -56,17 +48,6 @@ public final class MainActivity extends Activity implements ImageAdapter.OnItemC
         listView.setLayoutManager(new LinearLayoutManager(this));
         listView.setHasFixedSize(true);
         listView.setAdapter(imageAdapter);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        imageAdapter.cancelAllDownloads();
     }
 
     @Override
