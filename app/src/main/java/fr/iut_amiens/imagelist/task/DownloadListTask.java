@@ -1,29 +1,29 @@
 package fr.iut_amiens.imagelist.task;
 
-import android.os.AsyncTask;
+import android.content.AsyncTaskLoader;
+import android.content.Context;
 import android.util.Log;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import fr.iut_amiens.imagelist.ImageAdapter;
 import fr.iut_amiens.imagelist.model.Image;
 import fr.iut_amiens.imagelist.service.ImageDownloader;
 
-public final class DownloadListTask extends AsyncTask<Void, Void, List<Image>> {
+public final class DownloadListTask extends AsyncTaskLoader<List<Image>> {
 
     private final ImageDownloader downloader;
 
-    private final ImageAdapter imageAdapter;
+    private List<Image> images = null;
 
-    public DownloadListTask(ImageDownloader downloader, ImageAdapter imageAdapter) {
-        this.downloader = downloader;
-        this.imageAdapter = imageAdapter;
+    public DownloadListTask(Context context) {
+        super(context);
+        downloader = new ImageDownloader(context);
     }
 
     @Override
-    protected List<Image> doInBackground(Void... params) {
+    public List<Image> loadInBackground() {
         try {
             return downloader.downloadList();
         } catch (IOException e) {
@@ -33,7 +33,24 @@ public final class DownloadListTask extends AsyncTask<Void, Void, List<Image>> {
     }
 
     @Override
-    protected void onPostExecute(List<Image> images) {
-        imageAdapter.setContent(images);
+    protected void onStartLoading() {
+        if (images != null) {
+            deliverResult(images);
+        }
+
+        if (takeContentChanged() || images == null) {
+            forceLoad();
+        }
+    }
+
+    @Override
+    public void deliverResult(List<Image> data) {
+        images = data;
+        super.deliverResult(data);
+    }
+
+    @Override
+    protected void onStopLoading() {
+        cancelLoad();
     }
 }
